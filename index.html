@@ -6,30 +6,33 @@
     <style>
         body { font-family: Arial; text-align: center; background-color: olive; color: black; margin: 10px; }
         table { margin: auto; border-collapse: collapse; width: 100%; max-width: 600px; background-color: #fffdd0; }
-        th, td { border: 1px solid black; padding: 8px; text-align: center; }
-        input { width: 90%; padding: 5px; border: none; background: transparent; }
-        button { padding: 10px; margin: 10px; background-color: #fffdd0; border: 1px solid black; cursor: pointer; font-weight: bold; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; font-size: 14px; }
+        input { width: 90%; padding: 5px; border: none; background: transparent; text-align: center; }
+        button { padding: 10px; margin: 10px; background-color: #fffdd0; border: 1px solid black; cursor: pointer; font-weight: bold; border-radius: 5px; }
         .coming { background-color: #c8f7c5; }
         .notcoming { background-color: #f7c5c5; }
-        #status { font-size: 12px; color: white; margin-bottom: 5px; }
+        #status { font-size: 12px; color: white; margin-bottom: 5px; font-weight: bold; }
+        .del-btn { background: none; border: none; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
 
     <h2>Shared Trip Planner 🌍</h2>
-    <div id="status">Syncing...</div>
+    <div id="status">Checking connection...</div>
 
     <table id="tripTable">
-        <tr><th>Name</th><th>Coming?</th><th>Budget (৳)</th><th>Place</th></tr>
+        <tr><th>Name</th><th>Coming?</th><th>Budget (৳)</th><th>Place</th><th>X</th></tr>
     </table>
 
-    <button onclick="addRow()">+ Add Friend</button>
-    <button onclick="saveToCloud()">☁️ Save Changes</button>
+    <div style="margin-top: 15px;">
+        <button onclick="addRow()">+ Add Friend</button>
+        <button onclick="saveToCloud()" style="background-color: #ffd700;">☁️ Save Changes</button>
+    </div>
 
-    <p id="totalBudget">Total Budget: 0 ৳</p>
+    <h3 id="totalBudget">Total Budget: 0 ৳</h3>
 
     <script>
-        // REPLACE THIS URL with your own from jsonbin.io or a similar service
+        // YOUR UPDATED CLOUD INFO
         const API_URL = "https://api.jsonbin.io/v3/b/69b1b847aa77b81da9d8121e?meta=false";
         const API_KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou"; 
 
@@ -40,35 +43,41 @@
             try {
                 const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY }});
                 const data = await res.json();
-                friends = data.record || [];
+                friends = Array.isArray(data) ? data : []; 
                 renderTable();
-                document.getElementById('status').innerText = "Updated just now";
-            } catch (e) { document.getElementById('status').innerText = "Offline mode"; }
+                document.getElementById('status').innerText = "✅ Updated just now";
+            } catch (e) { document.getElementById('status').innerText = "⚠️ Offline mode"; }
         }
 
         async function saveToCloud() {
             document.getElementById('status').innerText = "Saving to cloud...";
-            await fetch(API_URL, {
-                method: 'PUT',
-                headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
-                body: JSON.stringify(friends)
-            });
-            document.getElementById('status').innerText = "Saved for everyone!";
+            try {
+                await fetch(API_URL.split('?')[0], {
+                    method: 'PUT',
+                    headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+                    body: JSON.stringify(friends)
+                });
+                document.getElementById('status').innerText = "✅ Saved for everyone!";
+            } catch (e) { alert("Save failed."); }
         }
 
         function renderTable() {
             let table = document.getElementById('tripTable');
-            table.innerHTML = `<tr><th>Name</th><th>Coming?</th><th>Budget (৳)</th><th>Place</th></tr>`;
+            table.innerHTML = `<tr><th>Name</th><th>Coming?</th><th>Budget (৳)</th><th>Place</th><th>X</th></tr>`;
             let total = 0;
             friends.forEach((f, i) => {
                 let row = table.insertRow();
                 row.className = f.coming ? 'coming' : 'notcoming';
                 
-                row.insertCell().innerHTML = `<input type="text" value="${f.name}" onchange="update(${i}, 'name', this.value)">`;
+                row.insertCell().innerHTML = `<input type="text" value="${f.name || ''}" placeholder="Name" onchange="update(${i}, 'name', this.value)">`;
                 row.insertCell().innerHTML = `<input type="checkbox" ${f.coming ? 'checked' : ''} onchange="update(${i}, 'coming', this.checked)">`;
-                row.insertCell().innerHTML = `<input type="number" value="${f.budget}" onchange="update(${i}, 'budget', this.value)">`;
-                row.insertCell().innerHTML = `<input type="text" value="${f.place}" onchange="update(${i}, 'place', this.value)">`;
-                if(f.budget) total += parseFloat(f.budget);
+                row.insertCell().innerHTML = `<input type="number" value="${f.budget || ''}" placeholder="0" onchange="update(${i}, 'budget', this.value)">`;
+                row.insertCell().innerHTML = `<input type="text" value="${f.place || ''}" placeholder="Place" onchange="update(${i}, 'place', this.value)">`;
+                
+                // THE CROSS BUTTON IS HERE:
+                row.insertCell().innerHTML = `<button class="del-btn" onclick="deleteFriend(${i})">❌</button>`;
+                
+                if(f.budget && f.coming) total += parseFloat(f.budget);
             });
             document.getElementById('totalBudget').innerText = "Total Budget: " + total + " ৳";
         }
@@ -81,6 +90,13 @@
         function addRow() {
             friends.push({name: "", coming: false, budget: "", place: ""});
             renderTable();
+        }
+
+        function deleteFriend(index) {
+            if(confirm("Remove this friend from the trip?")) {
+                friends.splice(index, 1);
+                renderTable();
+            }
         }
 
         loadData();
