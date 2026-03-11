@@ -1,157 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Friend Trip Planner</title>
-<style>
-body {
-    font-family: Arial;
-    text-align: center;
-    background-color: olive; /* whole page background */
-    color: black; /* default text color */
-}
-
-table {
-    margin: auto;
-    border-collapse: collapse;
-    width: 90%;
-    max-width: 600px;
-    background-color: #fffdd0; /* cream white inside table */
-}
-
-th, td {
-    border: 1px solid black;
-    padding: 10px;
-    text-align: center;
-    color: black; /* text inside table */
-}
-
-th {
-    background-color: #fffdd0; /* cream white header too */
-}
-
-input[type="text"], input[type="number"] {
-    width: 90%;
-    padding: 5px;
-    color: black;
-}
-
-button {
-    padding: 10px 15px;
-    margin: 10px;
-    color: black;
-    background-color: #fffdd0; /* cream white button */
-    border: 1px solid black;
-    cursor: pointer;
-}
-
-.coming {background-color: #c8f7c5;} /* green if coming */
-.notcoming {background-color: #f7c5c5;} /* red if not coming */
-#totalBudget {font-weight: bold; margin-top: 20px;}
-</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Friend Trip Planner</title>
+    <style>
+        body { font-family: Arial; text-align: center; background-color: olive; color: black; margin: 10px; }
+        table { margin: auto; border-collapse: collapse; width: 100%; max-width: 600px; background-color: #fffdd0; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+        input { width: 90%; padding: 5px; border: none; background: transparent; }
+        button { padding: 10px; margin: 10px; background-color: #fffdd0; border: 1px solid black; cursor: pointer; font-weight: bold; }
+        .coming { background-color: #c8f7c5; }
+        .notcoming { background-color: #f7c5c5; }
+        #status { font-size: 12px; color: white; margin-bottom: 5px; }
+    </style>
 </head>
-
 <body>
 
-<h2>Friend Trip Planner</h2>
+    <h2>Shared Trip Planner 🌍</h2>
+    <div id="status">Syncing...</div>
 
-<table id="tripTable">
-<tr>
-<th>Name</th>
-<th>Coming?</th>
-<th>Budget (৳)</th>
-<th>Place</th>
-</tr>
-</table>
+    <table id="tripTable">
+        <tr><th>Name</th><th>Coming?</th><th>Budget (৳)</th><th>Place</th></tr>
+    </table>
 
-<button onclick="addRow()">Add Friend</button>
+    <button onclick="addRow()">+ Add Friend</button>
+    <button onclick="saveToCloud()">☁️ Save Changes</button>
 
-<p id="totalBudget">Total Budget: 0 ৳</p>
+    <p id="totalBudget">Total Budget: 0 ৳</p>
 
-<script>
-// Blank initial array
-let friends = [];
+    <script>
+        // REPLACE THIS URL with your own from jsonbin.io or a similar service
+        const API_URL = "https://api.jsonbin.io/v3/b/YOUR_BIN_ID_HERE";
+        const API_KEY = "YOUR_API_KEY_HERE"; 
 
-// Function to render the table
-function renderTable(){
-    let table = document.getElementById('tripTable');
-    table.innerHTML = `<tr>
-        <th>Name</th>
-        <th>Coming?</th>
-        <th>Budget (৳)</th>
-        <th>Place</th>
-    </tr>`;
-    let total = 0;
-    friends.forEach((f,i)=>{
-        let row = table.insertRow();
-        // Name
-        let cell1 = row.insertCell();
-        let nameInput = document.createElement('input');
-        nameInput.type='text';
-        nameInput.value=f.name;
-        nameInput.placeholder='Name';
-        nameInput.oninput = ()=>{f.name=nameInput.value; saveData();}
-        cell1.appendChild(nameInput);
-        // Coming
-        let cell2 = row.insertCell();
-        let comingInput = document.createElement('input');
-        comingInput.type='checkbox';
-        comingInput.checked=f.coming;
-        comingInput.onchange = ()=>{
-            f.coming = comingInput.checked;
-            row.className = f.coming ? 'coming' : 'notcoming';
-            saveData();
-        };
-        cell2.appendChild(comingInput);
-        row.className = f.coming ? 'coming' : 'notcoming';
-        // Budget
-        let cell3 = row.insertCell();
-        let budgetInput = document.createElement('input');
-        budgetInput.type='number';
-        budgetInput.value=f.budget;
-        budgetInput.placeholder='Amount';
-        budgetInput.oninput = ()=>{
-            f.budget = budgetInput.value;
-            saveData();
-            calculateBudget();
-        };
-        cell3.appendChild(budgetInput);
-        if(f.budget) total += parseFloat(f.budget);
-        // Place
-        let cell4 = row.insertCell();
-        let placeInput = document.createElement('input');
-        placeInput.type='text';
-        placeInput.value=f.place;
-        placeInput.placeholder='Destination';
-        placeInput.oninput = ()=>{f.place=f.place; saveData();}
-        cell4.appendChild(placeInput);
-    });
-    calculateBudget();
-}
+        let friends = [];
 
-// Add new empty friend
-function addRow(){
-    friends.push({name:"", coming:false, budget:"", place:""});
-    renderTable();
-    saveData();
-}
+        async function loadData() {
+            document.getElementById('status').innerText = "Loading shared list...";
+            try {
+                const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY }});
+                const data = await res.json();
+                friends = data.record || [];
+                renderTable();
+                document.getElementById('status').innerText = "Updated just now";
+            } catch (e) { document.getElementById('status').innerText = "Offline mode"; }
+        }
 
-// Save data to localStorage
-function saveData(){
-    localStorage.setItem('friends', JSON.stringify(friends));
-}
+        async function saveToCloud() {
+            document.getElementById('status').innerText = "Saving to cloud...";
+            await fetch(API_URL, {
+                method: 'PUT',
+                headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+                body: JSON.stringify(friends)
+            });
+            document.getElementById('status').innerText = "Saved for everyone!";
+        }
 
-// Calculate total budget
-function calculateBudget(){
-    let total = 0;
-    friends.forEach(f=>{
-        if(f.budget) total += parseFloat(f.budget);
-    });
-    document.getElementById('totalBudget').innerText = "Total Budget: "+total+" ৳";
-}
+        function renderTable() {
+            let table = document.getElementById('tripTable');
+            table.innerHTML = `<tr><th>Name</th><th>Coming?</th><th>Budget (৳)</th><th>Place</th></tr>`;
+            let total = 0;
+            friends.forEach((f, i) => {
+                let row = table.insertRow();
+                row.className = f.coming ? 'coming' : 'notcoming';
+                
+                row.insertCell().innerHTML = `<input type="text" value="${f.name}" onchange="update(${i}, 'name', this.value)">`;
+                row.insertCell().innerHTML = `<input type="checkbox" ${f.coming ? 'checked' : ''} onchange="update(${i}, 'coming', this.checked)">`;
+                row.insertCell().innerHTML = `<input type="number" value="${f.budget}" onchange="update(${i}, 'budget', this.value)">`;
+                row.insertCell().innerHTML = `<input type="text" value="${f.place}" onchange="update(${i}, 'place', this.value)">`;
+                if(f.budget) total += parseFloat(f.budget);
+            });
+            document.getElementById('totalBudget').innerText = "Total Budget: " + total + " ৳";
+        }
 
-// Initial render
-renderTable();
-</script>
+        function update(index, field, value) {
+            friends[index][field] = value;
+            renderTable();
+        }
 
+        function addRow() {
+            friends.push({name: "", coming: false, budget: "", place: ""});
+            renderTable();
+        }
+
+        loadData();
+    </script>
 </body>
 </html>
