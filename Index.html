@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Friend Trip Planner</title>
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background-color: olive; /* whole page background */
+    color: black; /* default text color */
+}
+
+table {
+    margin: auto;
+    border-collapse: collapse;
+    width: 90%;
+    max-width: 600px;
+    background-color: #fffdd0; /* cream white inside table */
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 10px;
+    text-align: center;
+    color: black; /* text inside table */
+}
+
+th {
+    background-color: #fffdd0; /* cream white header too */
+}
+
+input[type="text"], input[type="number"] {
+    width: 90%;
+    padding: 5px;
+    color: black;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 10px;
+    color: black;
+    background-color: #fffdd0; /* cream white button */
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+.coming {background-color: #c8f7c5;} /* green if coming */
+.notcoming {background-color: #f7c5c5;} /* red if not coming */
+#totalBudget {font-weight: bold; margin-top: 20px;}
+</style>
+</head>
+
+<body>
+
+<h2>Friend Trip Planner</h2>
+
+<table id="tripTable">
+<tr>
+<th>Name</th>
+<th>Coming?</th>
+<th>Budget (৳)</th>
+<th>Place</th>
+</tr>
+</table>
+
+<button onclick="addRow()">Add Friend</button>
+
+<p id="totalBudget">Total Budget: 0 ৳</p>
+
+<script>
+// Blank initial array
+let friends = [];
+
+// Function to render the table
+function renderTable(){
+    let table = document.getElementById('tripTable');
+    table.innerHTML = `<tr>
+        <th>Name</th>
+        <th>Coming?</th>
+        <th>Budget (৳)</th>
+        <th>Place</th>
+    </tr>`;
+    let total = 0;
+    friends.forEach((f,i)=>{
+        let row = table.insertRow();
+        // Name
+        let cell1 = row.insertCell();
+        let nameInput = document.createElement('input');
+        nameInput.type='text';
+        nameInput.value=f.name;
+        nameInput.placeholder='Name';
+        nameInput.oninput = ()=>{f.name=nameInput.value; saveData();}
+        cell1.appendChild(nameInput);
+        // Coming
+        let cell2 = row.insertCell();
+        let comingInput = document.createElement('input');
+        comingInput.type='checkbox';
+        comingInput.checked=f.coming;
+        comingInput.onchange = ()=>{
+            f.coming = comingInput.checked;
+            row.className = f.coming ? 'coming' : 'notcoming';
+            saveData();
+        };
+        cell2.appendChild(comingInput);
+        row.className = f.coming ? 'coming' : 'notcoming';
+        // Budget
+        let cell3 = row.insertCell();
+        let budgetInput = document.createElement('input');
+        budgetInput.type='number';
+        budgetInput.value=f.budget;
+        budgetInput.placeholder='Amount';
+        budgetInput.oninput = ()=>{
+            f.budget = budgetInput.value;
+            saveData();
+            calculateBudget();
+        };
+        cell3.appendChild(budgetInput);
+        if(f.budget) total += parseFloat(f.budget);
+        // Place
+        let cell4 = row.insertCell();
+        let placeInput = document.createElement('input');
+        placeInput.type='text';
+        placeInput.value=f.place;
+        placeInput.placeholder='Destination';
+        placeInput.oninput = ()=>{f.place=f.place; saveData();}
+        cell4.appendChild(placeInput);
+    });
+    calculateBudget();
+}
+
+// Add new empty friend
+function addRow(){
+    friends.push({name:"", coming:false, budget:"", place:""});
+    renderTable();
+    saveData();
+}
+
+// Save data to localStorage
+function saveData(){
+    localStorage.setItem('friends', JSON.stringify(friends));
+}
+
+// Calculate total budget
+function calculateBudget(){
+    let total = 0;
+    friends.forEach(f=>{
+        if(f.budget) total += parseFloat(f.budget);
+    });
+    document.getElementById('totalBudget').innerText = "Total Budget: "+total+" ৳";
+}
+
+// Initial render
+renderTable();
+</script>
+
+</body>
+</html>
