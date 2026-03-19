@@ -1,182 +1,133 @@
                     <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trip Planner 🌍</title>
+<title>Friend Trip Planner</title>
 
 <style>
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #f1f5f9;
     text-align: center;
-    background: linear-gradient(135deg, #ff9a9e, #fecfef);
-    color: #2d3436;
-    padding: 15px;
 }
 
-.info-box {
-    background: rgba(255,255,255,0.3);
+.container {
+    max-width: 600px;
+    margin: 40px auto;
     padding: 20px;
-    border-radius: 20px;
-    margin: 10px auto;
-    max-width: 400px;
 }
 
-.info-input {
-    padding: 10px;
-    margin: 8px;
-    width: 80%;
+h1 {
+    color: #38bdf8;
+    margin-bottom: 20px;
+}
+
+input {
+    width: 90%;
+    padding: 12px;
+    margin: 8px 0;
     border-radius: 10px;
-    border: none;
-    text-align: center;
-}
-
-table {
-    width: 100%;
-    background: white;
-    margin-top: 15px;
-    border-collapse: collapse;
-}
-
-td, th {
-    padding: 10px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 16px;
+    outline: none;
 }
 
 button {
-    padding: 10px;
-    margin: 5px;
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
     border: none;
     border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
     cursor: pointer;
+    background: linear-gradient(90deg, #38bdf8, #6366f1);
+    transition: 0.3s;
 }
 
-.add-btn { background: white; }
-.save-btn { background: orange; color: white; }
-.del-btn { background: red; color: white; }
+button:hover {
+    transform: scale(1.05);
+}
 
-#status { color: white; font-weight: bold; }
+.card {
+    background: rgba(30, 41, 59, 0.8);
+    padding: 15px;
+    margin: 10px auto;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    text-align: left;
+}
 </style>
+
 </head>
 
 <body>
 
-<h2>Trip Planner 🌍</h2>
+<div class="container">
 
-<div class="info-box">
-<input id="tripPlace" class="info-input" placeholder="Where?">
-<input id="tripDate" class="info-input" placeholder="When?">
+    <h1>Friend Trip Planner</h1>
+
+    <input type="text" id="name" placeholder="Friend Name">
+    <input type="number" id="budget" placeholder="Budget">
+
+    <button onclick="saveData()">Save</button>
+
+    <h2>Trip List</h2>
+    <div id="dataList"></div>
+
 </div>
 
-<div id="status">Connecting...</div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
-<table id="tripTable">
-<tr><th>Name</th><th>Going</th><th>Budget</th><th>X</th></tr>
-</table>
-
-<button class="add-btn" onclick="addRow()">+ Add</button>
-<button class="save-btn" onclick="saveData()">SAVE</button>
-
-<h3 id="totalBudget">Total: 0 ৳</h3>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* ✅ YOUR CONFIG (ALREADY ADDED) */
+<script>
+/* ================= FIREBASE SETUP ================= */
 const firebaseConfig = {
-  apiKey: "AIzaSyALTUk_r0kKG727PDzGu_T3yy072QRhF2g",
-  authDomain: "trip-planner-407ec.firebaseapp.com",
-  projectId: "trip-planner-407ec",
-  storageBucket: "trip-planner-407ec.firebasestorage.app",
-  messagingSenderId: "792839961352",
-  appId: "1:792839961352:web:1b1c12e27cc18dd9844abd",
-  measurementId: "G-NRCETSMYDQ"
+    YOUR_FIREBASE_CONFIG
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const docRef = doc(db, "trip", "global");
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-let friends = [];
+/* ================= SAVE DATA ================= */
+function saveData() {
+    let name = document.getElementById("name").value;
+    let budget = document.getElementById("budget").value;
 
-/* 🔄 LIVE SYNC */
-onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-        const data = docSnap.data();
+    if(name === "" || budget === "") return;
 
-        document.getElementById('tripPlace').value = data.tripPlace || "";
-        document.getElementById('tripDate').value = data.tripDate || "";
-        friends = data.list || [];
-
-        render();
-        document.getElementById('status').innerText = "🟢 Live";
-    } else {
-        document.getElementById('status').innerText = "🆕 New";
-    }
-});
-
-/* 💾 SAVE */
-async function saveData() {
-    const payload = {
-        tripPlace: document.getElementById('tripPlace').value,
-        tripDate: document.getElementById('tripDate').value,
-        list: friends
-    };
-
-    await setDoc(docRef, payload);
-}
-
-/* 📊 TABLE */
-function render() {
-    const table = document.getElementById('tripTable');
-    table.innerHTML = `<tr><th>Name</th><th>Going</th><th>Budget</th><th>X</th></tr>`;
-
-    let total = 0;
-
-    friends.forEach((f, i) => {
-        const row = table.insertRow();
-
-        row.insertCell().innerHTML =
-        `<input value="${f.name||''}" onchange="update(${i}, 'name', this.value)">`;
-
-        row.insertCell().innerHTML =
-        `<input type="checkbox" ${f.going?'checked':''} onchange="update(${i}, 'going', this.checked)">`;
-
-        row.insertCell().innerHTML =
-        `<input type="number" value="${f.budget||''}" onchange="update(${i}, 'budget', this.value)">`;
-
-        row.insertCell().innerHTML =
-        `<button class="del-btn" onclick="del(${i})">X</button>`;
-
-        if(f.going && f.budget) total += parseFloat(f.budget);
+    let newRef = db.ref("trips").push();
+    newRef.set({
+        name: name,
+        budget: budget
     });
 
-    document.getElementById('totalBudget').innerText = "Total: " + total + " ৳";
+    document.getElementById("name").value = "";
+    document.getElementById("budget").value = "";
 }
 
-/* ⚙️ FUNCTIONS */
-function addRow() {
-    friends.push({name:"", going:false, budget:""});
-    render();
-}
+/* ================= LOAD DATA ================= */
+db.ref("trips").on("value", function(snapshot) {
+    let dataList = document.getElementById("dataList");
+    dataList.innerHTML = "";
 
-function update(i, f, v) {
-    friends[i][f] = v;
-    render();
-}
+    snapshot.forEach(function(child) {
+        let data = child.val();
 
-function del(i) {
-    friends.splice(i,1);
-    render();
-}
-
-/* 🔗 GLOBAL */
-window.addRow = addRow;
-window.update = update;
-window.del = del;
-window.saveData = saveData;
-
+        dataList.innerHTML += `
+            <div class="card">
+                <b>Name:</b> ${data.name}<br>
+                <b>Budget:</b> ${data.budget}
+            </div>
+        `;
+    });
+});
 </script>
 
 </body>
