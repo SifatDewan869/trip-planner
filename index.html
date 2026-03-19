@@ -1,4 +1,4 @@
-                    <!DOCTYPE html>
+                  <!DOCTYPE html>
 <html>
 <head>
 <title>Friend Trip Planner</title>
@@ -6,10 +6,10 @@
 <style>
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
     background: linear-gradient(135deg, #0f172a, #1e293b);
     color: #f1f5f9;
+    margin: 0;
+    padding: 0;
     text-align: center;
 }
 
@@ -21,7 +21,6 @@ body {
 
 h1 {
     color: #38bdf8;
-    margin-bottom: 20px;
 }
 
 input {
@@ -32,26 +31,32 @@ input {
     border: 1px solid #334155;
     background: #1e293b;
     color: white;
-    font-size: 16px;
     outline: none;
 }
 
 button {
-    width: 90%;
-    padding: 12px;
-    margin: 10px 0;
+    padding: 10px 15px;
+    margin: 5px;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
-    color: white;
+    border-radius: 8px;
     cursor: pointer;
-    background: linear-gradient(90deg, #38bdf8, #6366f1);
-    transition: 0.3s;
+    font-weight: bold;
 }
 
-button:hover {
-    transform: scale(1.05);
+.save-btn {
+    width: 90%;
+    background: linear-gradient(90deg, #38bdf8, #6366f1);
+    color: white;
+}
+
+.edit-btn {
+    background: #facc15;
+    color: black;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
 }
 
 .card {
@@ -59,7 +64,6 @@ button:hover {
     padding: 15px;
     margin: 10px auto;
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
     text-align: left;
 }
 </style>
@@ -75,59 +79,89 @@ button:hover {
     <input type="text" id="name" placeholder="Friend Name">
     <input type="number" id="budget" placeholder="Budget">
 
-    <button onclick="saveData()">Save</button>
+    <button class="save-btn" onclick="saveData()">Save</button>
 
     <h2>Trip List</h2>
     <div id="dataList"></div>
 
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-<script>
-/* ================= FIREBASE SETUP ================= */
 const firebaseConfig = {
-    YOUR_FIREBASE_CONFIG
+  apiKey: "AIzaSyALTUk_r0kKG727PDzGu_T3yy072QRhF2g",
+  authDomain: "trip-planner-407ec.firebaseapp.com",
+  projectId: "trip-planner-407ec",
+  storageBucket: "trip-planner-407ec.firebasestorage.app",
+  messagingSenderId: "792839961352",
+  appId: "1:792839961352:web:3b9fd67d3f58ed39844abd",
+  measurementId: "G-CJ5DN8XJH5"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-/* ================= SAVE DATA ================= */
-function saveData() {
+let editId = null;
+
+/* SAVE OR UPDATE */
+window.saveData = function () {
     let name = document.getElementById("name").value;
     let budget = document.getElementById("budget").value;
 
-    if(name === "" || budget === "") return;
+    if (!name || !budget) return;
 
-    let newRef = db.ref("trips").push();
-    newRef.set({
-        name: name,
-        budget: budget
-    });
+    if (editId) {
+        update(ref(db, "trips/" + editId), {
+            name: name,
+            budget: budget
+        });
+        editId = null;
+    } else {
+        push(ref(db, "trips"), {
+            name: name,
+            budget: budget
+        });
+    }
 
     document.getElementById("name").value = "";
     document.getElementById("budget").value = "";
-}
+};
 
-/* ================= LOAD DATA ================= */
-db.ref("trips").on("value", function(snapshot) {
+/* LOAD DATA */
+onValue(ref(db, "trips"), (snapshot) => {
     let dataList = document.getElementById("dataList");
     dataList.innerHTML = "";
 
-    snapshot.forEach(function(child) {
+    snapshot.forEach((child) => {
         let data = child.val();
+        let id = child.key;
 
         dataList.innerHTML += `
             <div class="card">
                 <b>Name:</b> ${data.name}<br>
-                <b>Budget:</b> ${data.budget}
+                <b>Budget:</b> ${data.budget}<br><br>
+
+                <button class="edit-btn" onclick="editData('${id}', '${data.name}', '${data.budget}')">Edit</button>
+                <button class="delete-btn" onclick="deleteData('${id}')">Delete</button>
             </div>
         `;
     });
 });
+
+/* DELETE */
+window.deleteData = function(id) {
+    remove(ref(db, "trips/" + id));
+};
+
+/* EDIT */
+window.editData = function(id, name, budget) {
+    document.getElementById("name").value = name;
+    document.getElementById("budget").value = budget;
+    editId = id;
+};
 </script>
 
 </body>
