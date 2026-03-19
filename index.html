@@ -1,95 +1,81 @@
-                                   <!DOCTYPE html>
+                <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trip Planner 🌍</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: linear-gradient(135deg, #ff9a9e, #fecfef); margin: 0; padding: 15px; min-height: 100vh; color: #2d3436; }
-        .info-box { background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 20px; margin: 10px auto; max-width: 400px; }
-        .info-input { border: none; padding: 10px; margin: 5px; border-radius: 10px; width: 85%; text-align: center; font-weight: bold; background: white; }
-        .table-container { background: white; border-radius: 20px; padding: 10px; margin-top: 20px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: 10px; font-size: 11px; border-bottom: 2px solid #eee; text-transform: uppercase; color: #636e72; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        input { width: 90%; padding: 8px; border: 1px solid #dfe6e9; border-radius: 5px; text-align: center; }
-        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .save-btn { background: #fdcb6e; color: white; width: 90%; font-size: 18px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .add-btn { background: white; color: #ff7675; border: 1.5px solid #ff7675; }
-        #status { font-weight: bold; margin: 10px; font-size: 14px; color: #2d3436; }
+        body { font-family: sans-serif; text-align: center; background: #ff9a9e; padding: 20px; }
+        .box { background: white; padding: 20px; border-radius: 20px; max-width: 400px; margin: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        input { width: 80%; padding: 10px; margin: 5px; border-radius: 10px; border: 1px solid #ddd; }
+        table { width: 100%; margin-top: 20px; }
+        .btn { padding: 15px; width: 100%; background: #fdcb6e; border: none; border-radius: 15px; color: white; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        #status { margin: 10px; font-weight: bold; color: #2d3436; }
     </style>
 </head>
 <body>
 
-    <h2>Trip Planner 🌍</h2>
-    <div class="info-box">
-        <input type="text" id="tripPlace" class="info-input" placeholder="📍 Destination">
-        <input type="text" id="tripDate" class="info-input" placeholder="📅 Date & Time">
+    <div class="box">
+        <h2>Trip Planner 🌍</h2>
+        <input type="text" id="tripPlace" placeholder="📍 Where to?">
+        <input type="text" id="tripDate" placeholder="📅 When?">
+        
+        <div id="status">Connecting...</div>
+
+        <table id="tripTable"></table>
+        
+        <button onclick="addRow()" style="background:#eee; border:none; padding:10px; border-radius:10px; width:100%; margin-top:10px;">+ Add Person</button>
+        <button class="btn" onclick="saveData()">☁️ SAVE NOW</button>
     </div>
-
-    <div id="status">Checking Connection...</div>
-
-    <div class="table-container">
-        <table id="tripTable">
-            <tr><th>NAME</th><th>OK?</th><th>BUDGET</th></tr>
-        </table>
-    </div>
-
-    <button class="add-btn" onclick="addRow()">+ Add Friend</button><br>
-    <button class="save-btn" onclick="saveToCloud()">☁️ SAVE EVERYTHING</button>
 
     <script>
-        // BRAND NEW PRIVATE BIN
-        const BIN_ID = "67db0ca2ad19ca34f8092acc"; 
-        const KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
-        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        const B_ID = "67db0ca2ad19ca34f8092acc"; 
+        const M_KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
+        const URL = `https://api.jsonbin.io/v3/b/${B_ID}`;
 
         let friends = [];
 
-        async function loadData() {
+        async function load() {
             try {
-                const res = await fetch(API_URL + "/latest", { headers: { "X-Master-Key": KEY, "X-Bin-Meta": "false" } });
-                const data = await res.json();
-                document.getElementById('tripPlace').value = data.tripPlace || "";
-                document.getElementById('tripDate').value = data.tripDate || "";
-                friends = data.list || [];
-                renderTable();
-                document.getElementById('status').innerText = "✅ Online";
-            } catch (e) { document.getElementById('status').innerText = "🆕 System Ready"; }
+                const r = await fetch(URL + "/latest", { headers: { "X-Master-Key": M_KEY, "X-Bin-Meta": "false" } });
+                const d = await r.json();
+                document.getElementById('tripPlace').value = d.tripPlace || "";
+                document.getElementById('tripDate').value = d.tripDate || "";
+                friends = d.list || [];
+                render();
+                document.getElementById('status').innerText = "✅ Connected";
+            } catch (e) { document.getElementById('status').innerText = "❌ Load Error"; }
         }
 
-        async function saveToCloud() {
+        async function saveData() {
             document.getElementById('status').innerText = "Saving...";
-            const payload = {
-                list: friends,
-                tripPlace: document.getElementById('tripPlace').value,
-                tripDate: document.getElementById('tripDate').value
+            const body = { 
+                list: friends, 
+                tripPlace: document.getElementById('tripPlace').value, 
+                tripDate: document.getElementById('tripDate').value 
             };
             try {
-                const res = await fetch(API_URL, {
+                const r = await fetch(URL, {
                     method: 'PUT',
-                    headers: { "Content-Type": "application/json", "X-Master-Key": KEY },
-                    body: JSON.stringify(payload)
+                    headers: { "Content-Type": "application/json", "X-Master-Key": M_KEY },
+                    body: JSON.stringify(body)
                 });
-                if(res.ok) { 
-                    document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!";
-                    setTimeout(() => { document.getElementById('status').innerText = "✅ Online"; }, 3000);
-                } else { alert("Error. Please try again."); }
-            } catch (e) { alert("Check internet connection."); }
+                if(r.ok) { document.getElementById('status').innerText = "✅ SAVED!"; }
+                else { alert("Database error. Try again."); }
+            } catch (e) { alert("Check internet."); }
         }
 
-        function renderTable() {
-            const table = document.getElementById('tripTable');
-            table.innerHTML = `<tr><th>NAME</th><th>OK?</th><th>BUDGET</th></tr>`;
+        function render() {
+            const t = document.getElementById('tripTable');
+            t.innerHTML = "";
             friends.forEach((f, i) => {
-                const row = table.insertRow();
-                row.insertCell().innerHTML = `<input type="text" value="${f.name||''}" onchange="friends[${i}].name=this.value">`;
+                const row = t.insertRow();
+                row.insertCell().innerHTML = `<input style="width:70%" type="text" value="${f.name||''}" onchange="friends[${i}].name=this.value">`;
                 row.insertCell().innerHTML = `<input type="checkbox" ${f.coming?'checked':''} onchange="friends[${i}].coming=this.checked">`;
-                row.insertCell().innerHTML = `<input type="number" value="${f.budget||''}" onchange="friends[${i}].budget=this.value">`;
             });
         }
-        function addRow() { friends.push({name:"", coming:false, budget:""}); renderTable(); }
-        loadData();
+        function addRow() { friends.push({name:"", coming:false}); render(); }
+        load();
     </script>
 </body>
 </html>
