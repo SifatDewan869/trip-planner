@@ -1,173 +1,92 @@
-                    <!DOCTYPE html>
+                                    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ff9a9e">
     <link rel="icon" href="https://img.icons8.com/color/512/island-on-water.png">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/island-on-water.png">
     <title>Trip Planner 🌍</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            text-align: center; 
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            background-attachment: fixed;
-            color: #2d3436; margin: 0; padding: 15px; min-height: 100vh;
-        }
-        .info-box {
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 15px; border-radius: 20px;
-            margin: 10px auto; max-width: 400px;
-            border: 1px solid rgba(255,255,255,0.4);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-        .info-input { 
-            background: rgba(255,255,255,0.5); border: none; padding: 8px; 
-            margin: 5px; border-radius: 10px; width: 85%; text-align: center;
-            font-weight: bold; color: #2d3436; font-size: 15px;
-        }
-        .table-container { 
-            overflow-x: auto; margin: 20px auto; max-width: 100%; 
-            background: rgba(255, 255, 255, 0.25); 
-            backdrop-filter: blur(12px); border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-        }
-        table { width: 100%; border-collapse: collapse; min-width: 350px; }
-        th { background: rgba(255, 255, 255, 0.3); padding: 12px; font-size: 11px; text-transform: uppercase; }
-        td { padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        input { 
-            width: 85%; padding: 8px; border: none; background: rgba(255, 255, 255, 0.4); 
-            text-align: center; border-radius: 8px; font-size: 14px;
-        }
-        .coming { background-color: rgba(168, 230, 173, 0.4); }
-        .notcoming { background-color: rgba(255, 170, 170, 0.4); }
-        button { 
-            padding: 12px 20px; margin: 5px; border: none; cursor: pointer; 
-            font-weight: bold; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .add-btn { background-color: #ffffff; color: #ff7675; }
-        .save-btn { background-color: #fdcb6e; color: #fff; }
-        .share-btn { background-color: #55efc4; color: #fff; }
-        .del-btn { background: #ff7675; color: white; border-radius: 8px; padding: 5px 10px; border: none; }
-        #status, #lastUpdated { font-size: 12px; color: #fff; margin-bottom: 5px; font-weight: bold; }
-        #totalBudget { color: #fff; font-size: 24px; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); margin-top: 15px; }
+        body { font-family: sans-serif; text-align: center; background: linear-gradient(135deg, #ff9a9e, #fecfef); margin: 0; padding: 15px; min-height: 100vh; }
+        .info-box { background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 20px; margin: 10px auto; max-width: 400px; }
+        .info-input { border: none; padding: 10px; margin: 5px; border-radius: 10px; width: 80%; text-align: center; font-weight: bold; }
+        .table-container { background: white; border-radius: 20px; padding: 10px; margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 10px; font-size: 12px; border-bottom: 2px solid #eee; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        input { width: 90%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; text-align: center; }
+        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .save-btn { background: #fdcb6e; color: white; width: 80%; font-size: 18px; }
+        .add-btn { background: white; color: #ff7675; border: 1px solid #ff7675; }
+        #status { font-weight: bold; margin: 10px; color: #d63031; }
     </style>
 </head>
 <body>
 
     <h2>Trip Planner 🌍</h2>
     <div class="info-box">
-        <h3>📍 Destination & Time</h3>
-        <input type="text" id="tripPlace" class="info-input" placeholder="Where are we going?">
-        <input type="text" id="tripDate" class="info-input" placeholder="Which day?">
-        <input type="text" id="tripTime" class="info-input" placeholder="What time?">
+        <input type="text" id="tripPlace" class="info-input" placeholder="Destination">
+        <input type="text" id="tripDate" class="info-input" placeholder="Date">
     </div>
-    
+
     <div id="status">Connecting...</div>
-    <div id="lastUpdated">Last saved: Never</div>
 
     <div class="table-container">
         <table id="tripTable">
-            <tr><th>NAME</th><th>OK?</th><th>BUDGET</th><th>X</th></tr>
+            <tr><th>NAME</th><th>OK?</th><th>BUDGET</th></tr>
         </table>
     </div>
 
-    <div>
-        <button class="add-btn" onclick="addRow()">+ Add Friend</button>
-        <button class="save-btn" onclick="saveToCloud()">☁️ Save Changes</button>
-        <button class="share-btn" onclick="shareApp()">🔗 Share App</button>
-    </div>
-
-    <h3 id="totalBudget">Total Budget: 0 ৳</h3>
+    <button class="add-btn" onclick="addRow()">+ Add Friend</button><br>
+    <button class="save-btn" onclick="saveToCloud()">☁️ SAVE EVERYTHING</button>
 
     <script>
-        // NEW FRESH BIN ID
-        const BIN_ID = "679f22c6ad19ca34f8f74706"; 
-        const API_KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
+        // BRAND NEW BIN - PUBLIC ACCESS
+        const BIN_ID = "678e8b60ad19ca34f8f0412e"; 
         const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
         let friends = [];
 
         async function loadData() {
-            document.getElementById('status').innerText = "Syncing with Cloud...";
             try {
-                const res = await fetch(`${API_URL}/latest`, {
-                    headers: { "X-Master-Key": API_KEY, "X-Bin-Meta": "false" }
-                });
-                if (!res.ok) throw new Error();
+                const res = await fetch(`${API_URL}/latest`, { headers: { "X-Bin-Meta": "false" } });
                 const data = await res.json();
-                
                 document.getElementById('tripPlace').value = data.tripPlace || "";
                 document.getElementById('tripDate').value = data.tripDate || "";
-                document.getElementById('tripTime').value = data.tripTime || "";
                 friends = data.list || [];
-                document.getElementById('lastUpdated').innerText = "Last saved: " + (data.updatedAt || "Never");
-                
                 renderTable();
-                document.getElementById('status').innerText = "✅ Online";
-            } catch (e) { 
-                document.getElementById('status').innerText = "🆕 New Session Started"; 
-            }
+                document.getElementById('status').innerText = "✅ Connected";
+            } catch (e) { document.getElementById('status').innerText = "⚠️ New List"; }
         }
 
         async function saveToCloud() {
             document.getElementById('status').innerText = "Saving...";
-            const now = new Date();
-            const timeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
             const payload = { 
                 list: friends, 
-                updatedAt: timeStr,
                 tripPlace: document.getElementById('tripPlace').value,
-                tripDate: document.getElementById('tripDate').value,
-                tripTime: document.getElementById('tripTime').value
+                tripDate: document.getElementById('tripDate').value
             };
-
             try {
-                const response = await fetch(API_URL, {
+                const res = await fetch(API_URL, {
                     method: 'PUT',
-                    headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                
-                if(response.ok) {
-                    document.getElementById('lastUpdated').innerText = "Last saved: " + timeStr;
-                    document.getElementById('status').innerText = "✅ Saved Successfully!";
-                } else {
-                    const err = await response.json();
-                    alert("Error: " + err.message);
-                }
-            } catch (e) { 
-                alert("Connection error. Try again!");
-            }
+                if(res.ok) { document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!"; }
+                else { alert("Error: Try refreshing the page."); }
+            } catch (e) { alert("Check internet connection."); }
         }
 
         function renderTable() {
             const table = document.getElementById('tripTable');
-            table.innerHTML = `<tr><th>NAME</th><th>OK?</th><th>BUDGET</th><th>X</th></tr>`;
-            let total = 0;
+            table.innerHTML = `<tr><th>NAME</th><th>OK?</th><th>BUDGET</th></tr>`;
             friends.forEach((f, i) => {
                 const row = table.insertRow();
-                row.className = f.coming ? 'coming' : 'notcoming';
-                row.insertCell().innerHTML = `<input type="text" value="${f.name || ''}" placeholder="Name" onchange="update(${i}, 'name', this.value)">`;
-                row.insertCell().innerHTML = `<input type="checkbox" ${f.coming ? 'checked' : ''} onchange="update(${i}, 'coming', this.checked)">`;
-                row.insertCell().innerHTML = `<input type="number" value="${f.budget || ''}" placeholder="0" onchange="update(${i}, 'budget', this.value)">`;
-                row.insertCell().innerHTML = `<button class="del-btn" onclick="deleteFriend(${i})">X</button>`;
-                if(f.budget && f.coming) total += parseFloat(f.budget);
+                row.insertCell().innerHTML = `<input type="text" value="${f.name||''}" onchange="friends[${i}].name=this.value">`;
+                row.insertCell().innerHTML = `<input type="checkbox" ${f.coming?'checked':''} onchange="friends[${i}].coming=this.checked">`;
+                row.insertCell().innerHTML = `<input type="number" value="${f.budget||''}" onchange="friends[${i}].budget=this.value">`;
             });
-            document.getElementById('totalBudget').innerText = "Total Budget: " + total + " ৳";
         }
-
-        function update(index, field, value) { friends[index][field] = value; renderTable(); }
-        function addRow() { friends.push({name: "", coming: false, budget: ""}); renderTable(); }
-        function deleteFriend(index) { if(confirm("Remove?")) { friends.splice(index, 1); renderTable(); } }
-        function shareApp() {
-            if (navigator.share) { navigator.share({ title: 'Trip Planner', url: window.location.href }); }
-            else { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); }
-        }
+        function addRow() { friends.push({name:"", coming:false, budget:""}); renderTable(); }
         loadData();
     </script>
 </body>
