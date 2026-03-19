@@ -8,15 +8,15 @@
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: linear-gradient(135deg, #ff9a9e, #fecfef); margin: 0; padding: 15px; min-height: 100vh; color: #2d3436; }
         .info-box { background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 20px; margin: 10px auto; max-width: 400px; }
         .info-input { border: none; padding: 10px; margin: 5px; border-radius: 10px; width: 85%; text-align: center; font-weight: bold; background: white; }
-        .table-container { background: white; border-radius: 20px; padding: 10px; margin-top: 20px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 300px; }
+        .table-container { background: white; border-radius: 20px; padding: 10px; margin-top: 20px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
         th { padding: 10px; font-size: 11px; border-bottom: 2px solid #eee; text-transform: uppercase; color: #636e72; }
         td { padding: 10px; border-bottom: 1px solid #eee; }
         input { width: 90%; padding: 8px; border: 1px solid #dfe6e9; border-radius: 5px; text-align: center; }
-        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; }
-        .save-btn { background: #fdcb6e; color: white; width: 90%; font-size: 18px; margin-top: 15px; }
+        button { padding: 12px 20px; margin: 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .save-btn { background: #fdcb6e; color: white; width: 90%; font-size: 18px; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .add-btn { background: white; color: #ff7675; border: 1.5px solid #ff7675; }
-        #status { font-weight: bold; margin: 10px; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        #status { font-weight: bold; margin: 10px; font-size: 14px; color: #2d3436; }
     </style>
 </head>
 <body>
@@ -27,7 +27,7 @@
         <input type="text" id="tripDate" class="info-input" placeholder="📅 Date & Time">
     </div>
 
-    <div id="status">Ready</div>
+    <div id="status">Checking Connection...</div>
 
     <div class="table-container">
         <table id="tripTable">
@@ -39,14 +39,14 @@
     <button class="save-btn" onclick="saveToCloud()">☁️ SAVE EVERYTHING</button>
 
     <script>
-        // NEW BULLETPROOF STORAGE
-        const API_URL = "https://api.jsonbin.io/v3/b/65f80f971f56e9443a562477";
+        // BRAND NEW PRIVATE BIN
+        const BIN_ID = "67db0ca2ad19ca34f8092acc"; 
         const KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
+        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
         let friends = [];
 
         async function loadData() {
-            document.getElementById('status').innerText = "Syncing...";
             try {
                 const res = await fetch(API_URL + "/latest", { headers: { "X-Master-Key": KEY, "X-Bin-Meta": "false" } });
                 const data = await res.json();
@@ -55,7 +55,7 @@
                 friends = data.list || [];
                 renderTable();
                 document.getElementById('status').innerText = "✅ Online";
-            } catch (e) { document.getElementById('status').innerText = "🆕 New Trip Started"; }
+            } catch (e) { document.getElementById('status').innerText = "🆕 System Ready"; }
         }
 
         async function saveToCloud() {
@@ -72,10 +72,10 @@
                     body: JSON.stringify(payload)
                 });
                 if(res.ok) { 
-                    document.getElementById('status').innerText = "✅ SAVED!";
-                    setTimeout(() => { document.getElementById('status').innerText = "✅ Online"; }, 2000);
-                } else { alert("Error. Please try once more."); }
-            } catch (e) { alert("Check internet!"); }
+                    document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!";
+                    setTimeout(() => { document.getElementById('status').innerText = "✅ Online"; }, 3000);
+                } else { alert("Error. Please try again."); }
+            } catch (e) { alert("Check internet connection."); }
         }
 
         function renderTable() {
