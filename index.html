@@ -1,4 +1,4 @@
-                <!DOCTYPE html>
+                    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -66,7 +66,7 @@
         <input type="text" id="tripTime" class="info-input" placeholder="What time?">
     </div>
     
-    <div id="status">Ready</div>
+    <div id="status">Connecting...</div>
     <div id="lastUpdated">Last saved: Never</div>
 
     <div class="table-container">
@@ -84,20 +84,20 @@
     <h3 id="totalBudget">Total Budget: 0 ৳</h3>
 
     <script>
-        // Updated API Config
-        const BIN_ID = "65f80f971f56e9443a562477"; // Fresh Public Bin ID
+        // NEW FRESH BIN ID
+        const BIN_ID = "679f22c6ad19ca34f8f74706"; 
         const API_KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
         const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
         let friends = [];
 
         async function loadData() {
-            document.getElementById('status').innerText = "Syncing...";
+            document.getElementById('status').innerText = "Syncing with Cloud...";
             try {
                 const res = await fetch(`${API_URL}/latest`, {
                     headers: { "X-Master-Key": API_KEY, "X-Bin-Meta": "false" }
                 });
-                if (!res.ok) throw new Error("Load failed");
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 
                 document.getElementById('tripPlace').value = data.tripPlace || "";
@@ -109,7 +109,7 @@
                 renderTable();
                 document.getElementById('status').innerText = "✅ Online";
             } catch (e) { 
-                document.getElementById('status').innerText = "⚠️ Ready (New Data)"; 
+                document.getElementById('status').innerText = "🆕 New Session Started"; 
             }
         }
 
@@ -129,10 +129,7 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'PUT',
-                    headers: { 
-                        "Content-Type": "application/json", 
-                        "X-Master-Key": API_KEY 
-                    },
+                    headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
                     body: JSON.stringify(payload)
                 });
                 
@@ -140,11 +137,11 @@
                     document.getElementById('lastUpdated').innerText = "Last saved: " + timeStr;
                     document.getElementById('status').innerText = "✅ Saved Successfully!";
                 } else {
-                    const errData = await response.json();
-                    alert("Error: " + errData.message);
+                    const err = await response.json();
+                    alert("Error: " + err.message);
                 }
             } catch (e) { 
-                alert("Check your internet connection!");
+                alert("Connection error. Try again!");
             }
         }
 
@@ -168,15 +165,9 @@
         function addRow() { friends.push({name: "", coming: false, budget: ""}); renderTable(); }
         function deleteFriend(index) { if(confirm("Remove?")) { friends.splice(index, 1); renderTable(); } }
         function shareApp() {
-            const url = window.location.href;
-            if (navigator.share) {
-                navigator.share({ title: 'Trip Planner', url: url });
-            } else {
-                navigator.clipboard.writeText(url);
-                alert("Link copied!");
-            }
+            if (navigator.share) { navigator.share({ title: 'Trip Planner', url: window.location.href }); }
+            else { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); }
         }
-        
         loadData();
     </script>
 </body>
