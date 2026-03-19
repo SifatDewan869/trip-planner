@@ -1,4 +1,4 @@
-                                                    <!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -44,7 +44,7 @@
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
 
-        table { width: 100%; border-collapse: collapse; min-width: 450px; }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
         th { background: rgba(255, 255, 255, 0.3); padding: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         
@@ -78,9 +78,10 @@
     <h2>Trip Planner 🌍</h2>
     
     <div class="info-box">
-        <h3>📅 Trip Details</h3>
-        <input type="text" id="tripDate" class="info-input" placeholder="Set Date">
-        <input type="text" id="tripTime" class="info-input" placeholder="Set Time">
+        <h3>📍 Destination & Time</h3>
+        <input type="text" id="tripPlace" class="info-input" placeholder="Where are we going?">
+        <input type="text" id="tripDate" class="info-input" placeholder="Which day?">
+        <input type="text" id="tripTime" class="info-input" placeholder="What time?">
     </div>
     
     <div id="status">Syncing...</div>
@@ -88,7 +89,7 @@
 
     <div class="table-container">
         <table id="tripTable">
-            <tr><th>Name</th><th>OK?</th><th>Budget</th><th>Place</th><th>X</th></tr>
+            <tr><th>Name</th><th>OK?</th><th>Budget</th><th>X</th></tr>
         </table>
     </div>
 
@@ -112,6 +113,7 @@
                 const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY }});
                 const data = await res.json();
                 
+                document.getElementById('tripPlace').value = data.tripPlace || "";
                 document.getElementById('tripDate').value = data.tripDate || "";
                 document.getElementById('tripTime').value = data.tripTime || "";
                 friends = data.list || (Array.isArray(data) ? data : []);
@@ -130,12 +132,13 @@
             let payload = { 
                 list: friends, 
                 updatedAt: timeStr,
+                tripPlace: document.getElementById('tripPlace').value,
                 tripDate: document.getElementById('tripDate').value,
                 tripTime: document.getElementById('tripTime').value
             };
 
             try {
-                await fetch(API_URL.split('?')[0], {
+                await fetch(API_URL.split('?'), {
                     method: 'PUT',
                     headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
                     body: JSON.stringify(payload)
@@ -147,7 +150,7 @@
 
         function renderTable() {
             let table = document.getElementById('tripTable');
-            table.innerHTML = `<tr><th>Name</th><th>OK?</th><th>Budget</th><th>Place</th><th>X</th></tr>`;
+            table.innerHTML = `<tr><th>Name</th><th>OK?</th><th>Budget</th><th>X</th></tr>`;
             let total = 0;
             friends.forEach((f, i) => {
                 let row = table.insertRow();
@@ -155,7 +158,6 @@
                 row.insertCell().innerHTML = `<input type="text" value="${f.name || ''}" placeholder="Name" onchange="update(${i}, 'name', this.value)">`;
                 row.insertCell().innerHTML = `<input type="checkbox" ${f.coming ? 'checked' : ''} onchange="update(${i}, 'coming', this.checked)">`;
                 row.insertCell().innerHTML = `<input type="number" value="${f.budget || ''}" placeholder="0" onchange="update(${i}, 'budget', this.value)">`;
-                row.insertCell().innerHTML = `<input type="text" value="${f.place || ''}" placeholder="Place" onchange="update(${i}, 'place', this.value)">`;
                 row.insertCell().innerHTML = `<button class="del-btn" onclick="deleteFriend(${i})">X</button>`;
                 if(f.budget && f.coming) total += parseFloat(f.budget);
             });
@@ -163,7 +165,7 @@
         }
 
         function update(index, field, value) { friends[index][field] = value; renderTable(); }
-        function addRow() { friends.push({name: "", coming: false, budget: "", place: ""}); renderTable(); }
+        function addRow() { friends.push({name: "", coming: false, budget: ""}); renderTable(); }
         function deleteFriend(index) { if(confirm("Remove this person?")) { friends.splice(index, 1); renderTable(); } }
         
         async function shareApp() {
