@@ -3,79 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff9a9e">
+    <link rel="icon" href="https://img.icons8.com/color/512/island-on-water.png">
     <title>Trip Planner 🌍</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #ff9a9e; padding: 20px; }
-        .box { background: white; padding: 20px; border-radius: 20px; max-width: 400px; margin: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        input { width: 80%; padding: 10px; margin: 5px; border-radius: 10px; border: 1px solid #ddd; }
-        table { width: 100%; margin-top: 20px; }
-        .btn { padding: 15px; width: 100%; background: #fdcb6e; border: none; border-radius: 15px; color: white; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; }
-        #status { margin: 10px; font-weight: bold; color: #2d3436; }
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            text-align: center; 
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            background-attachment: fixed;
+            color: #2d3436; margin: 0; padding: 15px; min-height: 100vh;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(12px);
+            padding: 20px; border-radius: 25px;
+            margin: 15px auto; max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .info-input { 
+            background: rgba(255,255,255,0.5); border: none; padding: 10px; 
+            margin: 8px; border-radius: 12px; width: 85%; text-align: center;
+            font-weight: bold; color: #2d3436; font-size: 16px;
+        }
+        .table-container { 
+            overflow-x: auto; margin: 20px auto; max-width: 100%; 
+            background: rgba(255, 255, 255, 0.25); 
+            backdrop-filter: blur(12px); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
+        th { background: rgba(255, 255, 255, 0.2); padding: 15px; font-size: 12px; text-transform: uppercase; color: #636e72; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        input[type="text"], input[type="number"] { 
+            width: 85%; padding: 8px; border: none; background: rgba(255, 255, 255, 0.4); 
+            text-align: center; border-radius: 8px; font-size: 14px;
+        }
+        button { 
+            padding: 12px 20px; margin: 8px; border: none; cursor: pointer; 
+            font-weight: bold; border-radius: 18px; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        button:active { transform: scale(0.9); }
+        .add-btn { background-color: #ffffff; color: #ff7675; }
+        .save-btn { background-color: #fdcb6e; color: #fff; width: 80%; font-size: 18px; }
+        .share-btn { background-color: #55efc4; color: #fff; }
+        .del-btn { background: #ff7675; color: white; border-radius: 8px; padding: 5px 10px; border: none; }
+        #status { font-size: 14px; color: #fff; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        #totalBudget { color: #fff; font-size: 26px; text-shadow: 1px 1px 4px rgba(0,0,0,0.2); margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <h2>Trip Planner 🌍</h2>
-        <input type="text" id="tripPlace" placeholder="📍 Where to?">
-        <input type="text" id="tripDate" placeholder="📅 When?">
-        
-        <div id="status">Connecting...</div>
+    <h2>Trip Planner 🌍</h2>
+    <div class="info-box">
+        <h3>📍 Trip Details</h3>
+        <input type="text" id="tripPlace" class="info-input" placeholder="Where are we going?">
+        <input type="text" id="tripDate" class="info-input" placeholder="When? (e.g. 23/03/2026)">
+    </div>
+    
+    <div id="status">📡 Connecting to Cloud...</div>
 
-        <table id="tripTable"></table>
-        
-        <button onclick="addRow()" style="background:#eee; border:none; padding:10px; border-radius:10px; width:100%; margin-top:10px;">+ Add Person</button>
-        <button class="btn" onclick="saveData()">☁️ SAVE NOW</button>
+    <div class="table-container">
+        <table id="tripTable">
+            <tr><th>NAME</th><th>OK?</th><th>BUDGET</th><th>X</th></tr>
+        </table>
     </div>
 
+    <div>
+        <button class="add-btn" onclick="addRow()">+ Add Friend</button>
+        <button class="share-btn" onclick="shareApp()">🔗 Share App</button><br>
+        <button class="save-btn" onclick="saveToCloud()">☁️ SAVE EVERYTHING</button>
+    </div>
+
+    <h3 id="totalBudget">Total Budget: 0 ৳</h3>
+
     <script>
-        const B_ID = "67db0ca2ad19ca34f8092acc"; 
-        const M_KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
-        const URL = `https://api.jsonbin.io/v3/b/${B_ID}`;
+        // NEW HIGH-SPEED BUCKET
+        const API_URL = "https://kvdb.io/SifatTrip_2026_Final/trip_data";
 
         let friends = [];
 
-        async function load() {
+        async function loadData() {
             try {
-                const r = await fetch(URL + "/latest", { headers: { "X-Master-Key": M_KEY, "X-Bin-Meta": "false" } });
-                const d = await r.json();
-                document.getElementById('tripPlace').value = d.tripPlace || "";
-                document.getElementById('tripDate').value = d.tripDate || "";
-                friends = d.list || [];
-                render();
-                document.getElementById('status').innerText = "✅ Connected";
-            } catch (e) { document.getElementById('status').innerText = "❌ Load Error"; }
+                const res = await fetch(API_URL);
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('tripPlace').value = data.tripPlace || "";
+                    document.getElementById('tripDate').value = data.tripDate || "";
+                    friends = data.list || [];
+                    renderTable();
+                    document.getElementById('status').innerText = "✅ Cloud Connected";
+                } else {
+                    document.getElementById('status').innerText = "🆕 New Trip Ready";
+                }
+            } catch (e) { document.getElementById('status').innerText = "🆕 New Trip Ready"; }
         }
 
-        async function saveData() {
-            document.getElementById('status').innerText = "Saving...";
-            const body = { 
+        async function saveToCloud() {
+            document.getElementById('status').innerText = "Saving to Cloud...";
+            const payload = { 
                 list: friends, 
-                tripPlace: document.getElementById('tripPlace').value, 
-                tripDate: document.getElementById('tripDate').value 
+                tripPlace: document.getElementById('tripPlace').value,
+                tripDate: document.getElementById('tripDate').value
             };
+
             try {
-                const r = await fetch(URL, {
-                    method: 'PUT',
-                    headers: { "Content-Type": "application/json", "X-Master-Key": M_KEY },
-                    body: JSON.stringify(body)
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
                 });
-                if(r.ok) { document.getElementById('status').innerText = "✅ SAVED!"; }
-                else { alert("Database error. Try again."); }
-            } catch (e) { alert("Check internet."); }
+                
+                if(res.ok) {
+                    document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!";
+                    setTimeout(() => { document.getElementById('status').innerText = "✅ Online"; }, 3000);
+                } else { alert("Could not save. Try again!"); }
+            } catch (e) { alert("Check your internet connection!"); }
         }
 
-        function render() {
-            const t = document.getElementById('tripTable');
-            t.innerHTML = "";
+        function renderTable() {
+            const table = document.getElementById('tripTable');
+            table.innerHTML = `<tr><th>NAME</th><th>OK?</th><th>BUDGET</th><th>X</th></tr>`;
+            let total = 0;
             friends.forEach((f, i) => {
-                const row = t.insertRow();
-                row.insertCell().innerHTML = `<input style="width:70%" type="text" value="${f.name||''}" onchange="friends[${i}].name=this.value">`;
-                row.insertCell().innerHTML = `<input type="checkbox" ${f.coming?'checked':''} onchange="friends[${i}].coming=this.checked">`;
+                const row = table.insertRow();
+                row.insertCell().innerHTML = `<input type="text" value="${f.name||''}" placeholder="Name" onchange="update(${i}, 'name', this.value)">`;
+                row.insertCell().innerHTML = `<input type="checkbox" ${f.coming?'checked':''} onchange="update(${i}, 'coming', this.checked)">`;
+                row.insertCell().innerHTML = `<input type="number" value="${f.budget||''}" placeholder="0" onchange="update(${i}, 'budget', this.value)">`;
+                row.insertCell().innerHTML = `<button class="del-btn" onclick="deleteRow(${i})">X</button>`;
+                
+                if (f.coming && f.budget) total += parseFloat(f.budget);
             });
+            document.getElementById('totalBudget').innerText = "Total Budget: " + total + " ৳";
         }
-        function addRow() { friends.push({name:"", coming:false}); render(); }
-        load();
+
+        function update(idx, field, val) { friends[idx][field] = val; renderTable(); }
+        function addRow() { friends.push({name: "", coming: false, budget: ""}); renderTable(); }
+        function deleteRow(idx) { friends.splice(idx, 1); renderTable(); }
+        
+        function shareApp() {
+            if (navigator.share) {
+                navigator.share({ title: 'Our Trip Plan', url: window.location.href });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Link copied! Send it to your friends.");
+            }
+        }
+        
+        loadData();
     </script>
 </body>
 </html>
