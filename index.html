@@ -14,11 +14,9 @@
         td { padding: 10px; border-bottom: 1px solid #eee; }
         input { width: 90%; padding: 8px; border: 1px solid #dfe6e9; border-radius: 5px; text-align: center; }
         button { padding: 12px 20px; margin: 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
         .save-btn { background: #fdcb6e; color: white; width: 90%; font-size: 18px; margin-top: 15px; box-shadow: 0 4px 10px rgba(253, 203, 110, 0.3); }
         .add-btn { background: white; color: #ff7675; border: 1.5px solid #ff7675; }
         #status { font-weight: bold; margin: 10px; font-size: 14px; }
-        .ok-dot { color: #55efc4; }
     </style>
 </head>
 <body>
@@ -29,7 +27,7 @@
         <input type="text" id="tripDate" class="info-input" placeholder="📅 Date & Time">
     </div>
 
-    <div id="status">Connecting...</div>
+    <div id="status">Ready</div>
 
     <div class="table-container">
         <table id="tripTable">
@@ -41,48 +39,44 @@
     <button class="save-btn" onclick="saveToCloud()">☁️ SAVE EVERYTHING</button>
 
     <script>
-        // MASTER KEY INCLUDED FOR PRIVATE ACCESS
-        const BIN_ID = "67db0735ad19ca34f80928a3"; 
-        const MASTER_KEY = "$2a$10$8py.DxjfTqR8l2oY4K256.BPY7JkIkN/KG/q0CCPklJ8Fe9qlhBou";
-        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        // NEW STABLE STORAGE (No Keys Required)
+        const STORAGE_ID = "sifat_trip_planner_869";
+        const API_URL = `https://api.restful-api.dev/objects/ff808181932a19770194883908f0607c`;
 
         let friends = [];
 
         async function loadData() {
             try {
-                const res = await fetch(`${API_URL}/latest`, { 
-                    headers: { "X-Master-Key": MASTER_KEY, "X-Bin-Meta": "false" } 
-                });
+                const res = await fetch(API_URL);
                 const data = await res.json();
-                document.getElementById('tripPlace').value = data.tripPlace || "";
-                document.getElementById('tripDate').value = data.tripDate || "";
-                friends = data.list || [];
+                const savedData = data.data;
+                document.getElementById('tripPlace').value = savedData.tripPlace || "";
+                document.getElementById('tripDate').value = savedData.tripDate || "";
+                friends = savedData.list || [];
                 renderTable();
-                document.getElementById('status').innerHTML = "<span class='ok-dot'>●</span> Online";
-            } catch (e) { document.getElementById('status').innerText = "⚠️ Ready to Start"; }
+                document.getElementById('status').innerText = "✅ Synced";
+            } catch (e) { document.getElementById('status').innerText = "🆕 New List Ready"; }
         }
 
         async function saveToCloud() {
-            document.getElementById('status').innerText = "Saving to Cloud...";
-            const payload = { 
-                list: friends, 
-                tripPlace: document.getElementById('tripPlace').value,
-                tripDate: document.getElementById('tripDate').value
+            document.getElementById('status').innerText = "Saving...";
+            const payload = {
+                name: "TripData",
+                data: {
+                    list: friends,
+                    tripPlace: document.getElementById('tripPlace').value,
+                    tripDate: document.getElementById('tripDate').value
+                }
             };
             try {
                 const res = await fetch(API_URL, {
                     method: 'PUT',
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "X-Master-Key": MASTER_KEY 
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
                 if(res.ok) { 
-                    document.getElementById('status').innerHTML = "<span class='ok-dot'>●</span> SAVED SUCCESSFULLY!"; 
-                    setTimeout(() => { document.getElementById('status').innerHTML = "<span class='ok-dot'>●</span> Online"; }, 3000);
-                }
-                else { alert("Database busy. Try again in a second!"); }
+                    document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!";
+                } else { alert("Error saving. Try one more time."); }
             } catch (e) { alert("Check internet connection."); }
         }
 
